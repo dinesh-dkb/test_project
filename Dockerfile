@@ -1,17 +1,17 @@
-# Dockerfile
-FROM python:3.11-slim
+# Use official Python image
+FROM python:3.10-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy project files
-COPY . /app
+# Copy requirements (if you have one)
+COPY requirements.txt .
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port (if it's a web app)
-EXPOSE 5000
+# Copy application code
+COPY vehicle_telematics.py .
 
-# Command to run the app
-CMD ["python", "test.py"]
+# Default command
+CMD ["python", "vehicle_telematics.py"]

@@ -1,41 +1,41 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'my-python-app'
-        DOCKER_TAG = "latest"
-    }
-
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/dinesh-dkb/test_project.git'
+                checkout scm
             }
         }
-        
-        stage('Install Dependencies') {
-            steps {
-                sh 'python3 -m venv venv'
-                sh './venv/bin/pip install -r requirements.txt'
-            }
-        }
-        
+
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:$DOCKER_TAG .'
+                script {
+                    docker.build("vehicle-telematics:latest")
+                }
             }
         }
-        
-        stage('Run Docker Container') {
+
+        stage('Deploy to Host') {
             steps {
-                sh 'docker run -d --name my-app-container -p 5000:5000 $IMAGE_NAME:$DOCKER_TAG'
+                script {
+                    // Use docker CLI on the host via mounted socket
+                    sh """
+                    docker run -d --name vehicle-telematics \
+                      --env AWS_ACCESS_KEY_ID=test \
+                      --env AWS_SECRET_ACCESS_KEY=test \
+                      --env AWS_DEFAULT_REGION=us-east-1 \
+                      --network=host \
+                      vehicle-telematics:latest
+                    """
+                }
             }
         }
     }
 
     post {
         always {
-            sh 'docker ps -a'
+            echo 'Pipeline finished.'
         }
     }
 }
